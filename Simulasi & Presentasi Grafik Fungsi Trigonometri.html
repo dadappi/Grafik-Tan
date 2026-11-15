@@ -1,0 +1,2496 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulasi &amp; Presentasi Grafik Fungsi Trigonometri (Sin, Cos, Tan)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --surface-tint: #eff6ff;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #cbd5e1;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --paper: #ffffff;
+      --grid-minor: #f1f5f9;
+      --grid-major: #cbd5e1;
+      --axis: #0f172a;
+      --curve: #e11d48;
+      --asym: #dc2626;
+      --intercept: #2563eb;
+      --extrema: #059669;
+      --midline: #7c3aed;
+      --compare: #64748b;
+      --pin: #ea580c;
+    }
+
+    html[data-theme="dark"] {
+      --bg: #0b1120;
+      --surface: #131c31;
+      --surface-soft: #1a2540;
+      --surface-tint: #1e2f52;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #2c3e63;
+      --accent: #3b82f6;
+      --accent-soft: #1e3a8a;
+      --paper: #0f172a;
+      --grid-minor: #172238;
+      --grid-major: #2b3c5e;
+      --axis: #f8fafc;
+      --curve: #fb7185;
+      --asym: #f87171;
+      --intercept: #60a5fa;
+      --extrema: #34d399;
+      --midline: #a78bfa;
+      --compare: #94a3b8;
+      --pin: #fb923c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .font-mono-math {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    .card {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    }
+
+    .subcard {
+      background-color: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .tintcard {
+      background-color: var(--surface-tint);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    /* Tombol ramah sentuhan jari di HP & proyektor */
+    .btn-touch {
+      min-height: 40px;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+      transition: transform 0.08s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn-touch:hover:not(:disabled) {
+      filter: brightness(0.97);
+    }
+
+    .btn-touch:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .btn-touch:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.32fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .workspace-grid.is-fullscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background-color: var(--bg);
+      padding: 12px 16px 28px;
+      overflow-y: auto;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .workspace-grid.is-fullscreen {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .fs-banner {
+      display: none;
+    }
+
+    .workspace-grid.is-fullscreen .fs-banner {
+      display: flex;
+      grid-column: 1 / -1;
+    }
+
+    /* Kanvas milimeter blok: tetap izinkan scroll vertikal HP */
+    canvas {
+      display: block;
+      width: 100%;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background-color: var(--paper);
+      cursor: crosshair;
+      touch-action: pan-y;
+    }
+
+    .test-row {
+      cursor: pointer;
+      transition: background-color 0.12s ease;
+    }
+
+    .test-row:hover {
+      background-color: var(--surface-tint);
+    }
+
+    .test-row.is-pinned-row {
+      background-color: var(--accent-soft);
+      font-weight: 700;
+    }
+
+    .table-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+    .table-scroll::-webkit-scrollbar-thumb {
+      background-color: var(--border);
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body>
+  <div class="max-w-7xl mx-auto px-3 sm:px-5 py-4 sm:py-6 space-y-4 sm:space-y-5">
+
+    <!-- 1. HEADER & KONTROL TEMA / MODE PROYEKTOR -->
+    <header class="card p-4 sm:p-5 space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider mb-1" style="background-color: var(--surface-tint); color: var(--accent);">
+            Matematika Wajib · Trigonometri
+          </div>
+          <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">
+            Simulasi &amp; Presentasi Grafik Fungsi Trigonometri
+          </h1>
+          <p class="text-xs sm:text-sm font-medium mt-0.5" style="color: var(--text-muted);">
+            Eksplorasi Interaktif Sin, Cos, dan Tan · Klik Grafik untuk Kunci Koordinat
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            id="themeBtn"
+            type="button"
+            class="btn-touch inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border"
+            style="background-color: var(--surface-soft); border-color: var(--border); color: var(--text);"
+          >
+            <span id="themeIcon">🌙</span>
+            <span id="themeLabel">Mode Gelap</span>
+          </button>
+
+          <button
+            id="fsBtn"
+            type="button"
+            class="btn-touch inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white shadow-sm"
+            style="background-color: var(--accent);"
+          >
+            <span>⛶</span>
+            <span id="fsLabel">Mode Proyektor</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. INPUT PERSAMAAN UNIVERSAL ("y = ...") + TOMBOL BANTU SIMBOL -->
+      <div class="subcard p-3.5 sm:p-4 space-y-3">
+        <div class="flex flex-col sm:flex-row gap-2.5">
+          <div class="flex-1 flex items-center rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-blue-500" style="background-color: var(--surface); border-color: var(--border);">
+            <span class="px-3 py-2.5 text-xs sm:text-sm font-mono-math font-bold border-r select-none" style="background-color: var(--surface-soft); border-color: var(--border); color: var(--accent);">
+              Fungsi
+            </span>
+            <input
+              id="eqInput"
+              type="text"
+              value="y = tan(2x)"
+              aria-label="Input persamaan grafik fungsi trigonometri"
+              placeholder="Contoh: y = tan(2x), y = 2 sin(3x + 30°) - 1, y = -tan(x + π/4)"
+              class="w-full min-h-[44px] px-3 py-2 text-sm sm:text-base font-mono-math font-semibold focus:outline-none"
+              style="background-color: var(--surface); color: var(--text);"
+            />
+          </div>
+
+          <button
+            id="applyEqBtn"
+            type="button"
+            class="btn-touch px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm shrink-0"
+            style="background-color: var(--accent);"
+          >
+            Gambar Grafik
+          </button>
+        </div>
+
+        <!-- Bar Tombol Sisip Simbol Cepat (Ramah Sentuhan Jari) -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-xs font-semibold mr-1" style="color: var(--text-muted);">Simbol Cepat:</span>
+          <button type="button" data-insert-sym="sin(" class="btn-touch px-2.5 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">sin(</button>
+          <button type="button" data-insert-sym="cos(" class="btn-touch px-2.5 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">cos(</button>
+          <button type="button" data-insert-sym="tan(" class="btn-touch px-2.5 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">tan(</button>
+          <button type="button" data-insert-sym="x" class="btn-touch px-3 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">x</button>
+          <button type="button" data-insert-sym="1/2 " class="btn-touch px-2.5 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">1/2</button>
+          <button type="button" data-insert-sym="30°" class="btn-touch px-2.5 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">30°</button>
+          <button type="button" data-insert-sym="45°" class="btn-touch px-2.5 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">45°</button>
+          <button type="button" data-insert-sym="π/4" class="btn-touch px-2.5 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">π/4</button>
+          <button type="button" data-insert-sym=" + " class="btn-touch px-3 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">+</button>
+          <button type="button" data-insert-sym=" - " class="btn-touch px-3 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">−</button>
+          <button type="button" data-insert-sym=")" class="btn-touch px-3 py-1.5 rounded-lg text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border);">)</button>
+          <button type="button" id="resetInputBtn" class="btn-touch px-3 py-1.5 rounded-lg text-xs font-bold border" style="background-color: var(--surface); border-color: var(--border); color: var(--asym);">Reset</button>
+        </div>
+
+        <!-- Pengaturan Domain, Satuan Derajat/Radian, dan Kurva Pembanding -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t text-xs sm:text-sm" style="border-color: var(--border);">
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div class="inline-flex items-center gap-1.5 font-medium">
+              <span style="color: var(--text-muted);">Domain x:</span>
+              <input
+                id="xMinInput"
+                type="number"
+                value="0"
+                aria-label="x awal"
+                class="w-20 min-h-[40px] px-2 py-1 rounded-lg border font-mono-math text-center font-semibold"
+                style="background-color: var(--surface); border-color: var(--border); color: var(--text);"
+              />
+              <span>° s.d.</span>
+              <input
+                id="xMaxInput"
+                type="number"
+                value="360"
+                aria-label="x akhir"
+                class="w-20 min-h-[40px] px-2 py-1 rounded-lg border font-mono-math text-center font-semibold"
+                style="background-color: var(--surface); border-color: var(--border); color: var(--text);"
+              />
+              <span>°</span>
+            </div>
+
+            <!-- Toggle Derajat (°) / Radian (π) -->
+            <div class="inline-flex rounded-xl border p-1 gap-1" style="background-color: var(--surface); border-color: var(--border);" role="group" aria-label="Satuan sudut sumbu-X">
+              <button
+                id="unitDegBtn"
+                type="button"
+                class="btn-touch px-3 py-1 rounded-lg text-xs font-bold text-white"
+                style="background-color: var(--accent);"
+              >
+                Derajat (°)
+              </button>
+              <button
+                id="unitRadBtn"
+                type="button"
+                class="btn-touch px-3 py-1 rounded-lg text-xs font-bold"
+                style="background-color: transparent; color: var(--text-muted);"
+              >
+                Radian (π)
+              </button>
+            </div>
+          </div>
+
+          <label class="btn-touch inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border font-semibold" style="background-color: var(--surface); border-color: var(--border);">
+            <input type="checkbox" id="compareBaseChk" class="w-4 h-4 accent-slate-600 rounded" />
+            <span class="w-4 border-t-2 border-dashed inline-block" style="border-color: var(--compare);"></span>
+            <span id="compareBaseLabel">Bandingkan grafik dasar (y = tan x)</span>
+          </label>
+        </div>
+
+        <!-- Kotak Pesan Diagnostik jika Input Tidak Valid -->
+        <div id="eqError" class="hidden p-3 rounded-xl border text-xs sm:text-sm font-semibold" style="background-color: #fef2f2; border-color: #fecaca; color: #b91c1c;"></div>
+      </div>
+
+      <!-- 3. PRESET CEPAT UNTUK PRESENTASI KELOMPOK (1 ORANG 1 SOAL) -->
+      <div class="subcard p-3 sm:p-3.5 space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="inline-flex rounded-xl border p-1 gap-1" style="background-color: var(--surface); border-color: var(--border);" role="tablist" aria-label="Kategori Soal Presentasi">
+            <button
+              id="tabTanBtn"
+              type="button"
+              data-preset-tab="tan"
+              class="btn-touch px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-white"
+              style="background-color: var(--curve);"
+            >
+              📌 Kelompok 5 (Tan)
+            </button>
+            <button
+              id="tabSinCosBtn"
+              type="button"
+              data-preset-tab="sincos"
+              class="btn-touch px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold"
+              style="background-color: transparent; color: var(--text-muted);"
+            >
+              🌊 Sinus &amp; Kosinus
+            </button>
+          </div>
+
+          <span id="presetHintText" class="text-xs font-medium" style="color: var(--text-muted);">
+            Pilih soal anggota kelompok (1 orang 1 soal) · Periode dasar tan = 180°
+          </span>
+        </div>
+
+        <div id="presetList" class="flex flex-wrap gap-2"></div>
+      </div>
+    </header>
+
+    <!-- 4 & 5. AREA UTAMA: KANVAS MILIMETER BLOK + PANEL PENJELASAN 6 LANGKAH -->
+    <main id="workspaceGrid" class="workspace-grid">
+
+      <!-- Banner Khusus Saat Mode Proyektor / Layar Penuh -->
+      <div class="fs-banner card px-4 py-2.5 items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+          <span class="px-2.5 py-1 rounded-lg font-bold text-white" style="background-color: var(--accent);">Mode Proyektor</span>
+          <span id="fsEqBadge" class="font-mono-math font-extrabold" style="color: var(--curve);">y = tan(2x)</span>
+        </div>
+        <button
+          id="exitFullBtn"
+          type="button"
+          class="btn-touch px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-white"
+          style="background-color: var(--asym);"
+        >
+          ✕ Keluar Layar Penuh
+        </button>
+      </div>
+
+      <!-- KOLOM KIRI / ATAS: KANVAS KERTAS MILIMETER BLOK INTERAKTIF -->
+      <section class="card p-3.5 sm:p-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-muted);">Grafik Aktif</span>
+            <h2 id="activeEqHeading" class="font-mono-math text-base sm:text-lg font-extrabold" style="color: var(--curve);">
+              y = tan(2x) · (0° ≤ x ≤ 360°)
+            </h2>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+            <label class="btn-touch inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border" style="background-color: var(--surface-soft); border-color: var(--border);">
+              <input type="checkbox" id="layerSpecials" checked class="w-4 h-4 accent-blue-600 rounded" />
+              <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: var(--intercept);"></span>
+              <span>Titik Istimewa</span>
+            </label>
+
+            <label class="btn-touch inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border" style="background-color: var(--surface-soft); border-color: var(--border);">
+              <input type="checkbox" id="layerBounds" checked class="w-4 h-4 accent-red-600 rounded" />
+              <span class="w-3 border-t-2 border-dashed inline-block" style="border-color: var(--asym);"></span>
+              <span id="boundsLayerText">Garis Asimtot</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Wrapper Kanvas dengan Pengukuran Lebar Aman Anti-0px -->
+        <div id="canvasWrap" class="w-full">
+          <canvas id="graphCanvas"></canvas>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs" style="color: var(--text-muted);">
+          <span>💡 <b>Klik / ketuk grafik</b> di titik mana pun untuk mengunci koordinat &amp; melihat substitusinya.</span>
+          <span id="hoverReadout" class="font-mono-math font-bold" style="color: var(--accent);">Siap dibidik</span>
+        </div>
+
+        <!-- Bar Chip Titik Cepat di Bawah Kanvas -->
+        <div class="subcard p-2.5 space-y-1.5">
+          <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider" style="color: var(--text-muted);">
+            <span>⚡ Chip Titik Cepat (Ketuk untuk Sorot di Grafik)</span>
+            <span id="quickChipCount"></span>
+          </div>
+          <div id="quickPointChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <!-- Kartu Koordinat Terpilih -->
+        <div id="pinnedCard" class="p-3.5 rounded-xl border-2" style="background-color: var(--surface-tint); border-color: var(--pin);">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div class="space-y-1.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold uppercase text-white" style="background-color: var(--pin);">
+                  Kartu Koordinat Terpilih
+                </span>
+                <span id="pinnedCoordTitle" class="font-mono-math text-base sm:text-lg font-extrabold">
+                  (22,5° ; 1)
+                </span>
+                <span id="pinnedRoleBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full border" style="background-color: var(--surface); border-color: var(--border); color: var(--extrema);">
+                  Titik Bantu
+                </span>
+              </div>
+              <div id="pinnedValueForms" class="text-xs font-mono-math font-semibold" style="color: var(--text-muted);"></div>
+              <p id="pinnedCalcText" class="text-xs sm:text-sm leading-relaxed"></p>
+            </div>
+
+            <button
+              id="clearPinBtn"
+              type="button"
+              class="btn-touch shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold border"
+              style="background-color: var(--surface); border-color: var(--border); color: var(--asym);"
+            >
+              ✕ Lepas Pin
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- KOLOM KANAN / BAWAH: ALUR PENJELASAN INDUKTIF 6 LANGKAH + CUE CARD PRESENTER -->
+      <section class="card p-4 sm:p-5 flex flex-col justify-between gap-4">
+        <div class="space-y-3.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-muted);">
+              Penjelasan Induktif (6 Langkah)
+            </span>
+            <span id="stepCounter" class="text-xs font-mono-math font-bold px-2.5 py-1 rounded-lg" style="background-color: var(--surface-tint); color: var(--accent);">
+              Langkah 1 / 6
+            </span>
+          </div>
+
+          <!-- 6 Pill Indikator Langkah -->
+          <div id="stepChips" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+
+          <!-- Konten Langkah Aktif -->
+          <div id="stepContent" class="space-y-3 text-sm sm:text-[15px] leading-relaxed"></div>
+        </div>
+
+        <!-- Navigasi Besar Sebelumnya / Berikutnya -->
+        <div class="pt-3 border-t grid grid-cols-2 gap-3" style="border-color: var(--border);">
+          <button
+            id="prevStepBtn"
+            type="button"
+            class="btn-touch w-full px-4 py-2.5 rounded-xl text-sm font-bold border"
+            style="background-color: var(--surface-soft); border-color: var(--border); color: var(--text);"
+          >
+            ← Sebelumnya
+          </button>
+
+          <button
+            id="nextStepBtn"
+            type="button"
+            class="btn-touch w-full px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm"
+            style="background-color: var(--accent);"
+          >
+            Berikutnya →
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =========================================================================
+         1. DATA PRESET KELOMPOK & KONFIGURASI
+         ========================================================================= */
+      const TAN_PRESETS = [
+        { id: 'tan1', label: '1. y = 2 tan(x)', eq: 'y = 2 tan(x)' },
+        { id: 'tan2', label: '2. y = tan(2x)', eq: 'y = tan(2x)' },
+        { id: 'tan3', label: '3. y = 3 tan(1/2 x)', eq: 'y = 3 tan(1/2 x)' },
+        { id: 'tan4', label: '4. y = tan(x) + 2', eq: 'y = tan(x) + 2' },
+        { id: 'tan5', label: '5. y = 2 tan(x - 30°)', eq: 'y = 2 tan(x - 30°)' },
+        { id: 'tan6', label: '6. y = -tan(x + π/4)', eq: 'y = -tan(x + π/4)' }
+      ];
+
+      const SINCOS_PRESETS = [
+        { id: 'sc1', label: '1. y = 2 sin(x)', eq: 'y = 2 sin(x)' },
+        { id: 'sc2', label: '2. y = sin(2x)', eq: 'y = sin(2x)' },
+        { id: 'sc3', label: '3. y = 2 sin(3x + 30°) - 1', eq: 'y = 2 sin(3x + 30°) - 1' },
+        { id: 'sc4', label: '4. y = -3 cos(2x - 60°) + 2', eq: 'y = -3 cos(2x - 60°) + 2' },
+        { id: 'sc5', label: '5. y = cos(x) + 1', eq: 'y = cos(x) + 1' }
+      ];
+
+      const STEP_TITLES = [
+        '1. Tabel Uji Titik',
+        '2. Plot & Asimtot',
+        '3. Kurva 1 Periode',
+        '4. Pola Penuh',
+        '5. Titik Istimewa',
+        '6. Kesimpulan & Q&A'
+      ];
+
+      const RAD = d => (d * Math.PI) / 180;
+      const DEG = r => (r * 180) / Math.PI;
+      const $ = id => document.getElementById(id);
+
+      /* =========================================================================
+         2. EVALUATOR ARITMATIKA AMAN (BEBAS EVAL / NEW FUNCTION, ANTI-CSP ERROR)
+         ========================================================================= */
+      function safeEvalArithmetic(expr, piValue = 180) {
+        if (expr === null || expr === undefined) return NaN;
+        let s = String(expr).trim();
+        if (s === '' || s === '+') return 1;
+        if (s === '-') return -1;
+
+        s = s.replace(/(\d+(?:\.\d+)?)\s*(?:π|pi)/gi, `($1*${piValue})`);
+        s = s.replace(/(?:π|pi)/gi, `(${piValue})`);
+
+        const tokens = [];
+        let i = 0;
+        while (i < s.length) {
+          const ch = s[i];
+          if (/\s/.test(ch)) {
+            i++;
+            continue;
+          }
+          if (/[0-9.]/.test(ch)) {
+            let numStr = '';
+            while (i < s.length && /[0-9.]/.test(s[i])) {
+              numStr += s[i++];
+            }
+            const val = Number(numStr);
+            if (!isFinite(val)) return NaN;
+            tokens.push({ type: 'num', value: val });
+          } else if ('+-*/()'.includes(ch)) {
+            tokens.push({ type: 'op', value: ch });
+            i++;
+          } else {
+            return NaN;
+          }
+        }
+
+        if (tokens.length === 0) return NaN;
+
+        let pos = 0;
+        function parseExpr() {
+          let left = parseTerm();
+          while (pos < tokens.length && tokens[pos].type === 'op' && (tokens[pos].value === '+' || tokens[pos].value === '-')) {
+            const op = tokens[pos++].value;
+            const right = parseTerm();
+            left = op === '+' ? left + right : left - right;
+          }
+          return left;
+        }
+
+        function parseTerm() {
+          let left = parseFactor();
+          while (pos < tokens.length && tokens[pos].type === 'op' && (tokens[pos].value === '*' || tokens[pos].value === '/')) {
+            const op = tokens[pos++].value;
+            const right = parseFactor();
+            if (op === '/') {
+              if (Math.abs(right) < 1e-12) return NaN;
+              left = left / right;
+            } else {
+              left = left * right;
+            }
+          }
+          return left;
+        }
+
+        function parseFactor() {
+          if (pos >= tokens.length) return NaN;
+          const tok = tokens[pos];
+          if (tok.type === 'op' && (tok.value === '+' || tok.value === '-')) {
+            pos++;
+            const val = parseFactor();
+            return tok.value === '-' ? -val : val;
+          }
+          if (tok.type === 'op' && tok.value === '(') {
+            pos++;
+            const val = parseExpr();
+            if (pos >= tokens.length || tokens[pos].type !== 'op' || tokens[pos].value !== ')') {
+              return NaN;
+            }
+            pos++;
+            return val;
+          }
+          if (tok.type === 'num') {
+            pos++;
+            return tok.value;
+          }
+          return NaN;
+        }
+
+        const result = parseExpr();
+        if (pos !== tokens.length || !isFinite(result)) return NaN;
+        return result;
+      }
+
+      /* =========================================================================
+         3. PEMFORMATAN ANGKA, SUDUT, DAN NILAI AKAR EKSAK
+         ========================================================================= */
+      function fmtNum(n) {
+        if (n === null || n === undefined || !isFinite(n)) return 'Tak Terdefinisi';
+        if (Math.abs(n) < 1e-8) return '0';
+        const rounded = Number(n.toFixed(2));
+        return String(rounded).replace('.', ',').replace('-', '−');
+      }
+
+      function gcd(a, b) {
+        a = Math.abs(Math.round(a));
+        b = Math.abs(Math.round(b));
+        while (b) {
+          const t = b;
+          b = a % b;
+          a = t;
+        }
+        return a || 1;
+      }
+
+      function fmtAngle(deg, unitOverride = null) {
+        const unit = unitOverride || state.angleUnit;
+        if (unit === 'deg') {
+          return fmtNum(deg) + '°';
+        }
+        if (Math.abs(deg) < 1e-8) return '0';
+        const ratio = deg / 180;
+        const denominators = [1, 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 36];
+        for (const den of denominators) {
+          const numFloat = ratio * den;
+          const numInt = Math.round(numFloat);
+          if (Math.abs(numFloat - numInt) < 1e-5) {
+            const g = gcd(numInt, den);
+            const n = numInt / g;
+            const d = den / g;
+            const sign = n < 0 ? '−' : '';
+            const absN = Math.abs(n);
+            const numStr = absN === 1 ? 'π' : `${absN}π`;
+            return d === 1 ? `${sign}${numStr}` : `${sign}${numStr}/${d}`;
+          }
+        }
+        return fmtNum(RAD(deg)) + ' rad';
+      }
+
+      function fmtExactTrig(a, d, baseVal) {
+        if (baseVal === null || baseVal === undefined || !isFinite(baseVal)) {
+          return 'Tak Terdefinisi';
+        }
+        const specials = [
+          [0, 0, 1],
+          [0.5, 0.5, 1],
+          [1, 1, 1],
+          [Math.SQRT1_2, 0.5, 2],
+          [Math.sqrt(3) / 2, 0.5, 3],
+          [Math.sqrt(3), 1, 3],
+          [Math.sqrt(3) / 3, 1 / 3, 3]
+        ];
+        const absB = Math.abs(baseVal);
+        const match = specials.find(s => Math.abs(s[0] - absB) < 1e-6);
+        if (!match) return fmtNum(a * baseVal + d);
+
+        const sign = baseVal < -1e-8 ? -1 : 1;
+        const coeff = a * sign * match[1];
+        const radPart = match[2];
+
+        let term = '';
+        if (Math.abs(coeff) < 1e-8) {
+          term = '0';
+        } else if (radPart === 1) {
+          if (Math.abs(Math.abs(coeff) - 0.5) < 1e-6) {
+            term = (coeff < 0 ? '−' : '') + '½';
+          } else {
+            term = fmtNum(coeff);
+          }
+        } else if (Math.abs(Math.abs(coeff) - 1 / 3) < 1e-6) {
+          term = (coeff < 0 ? '−' : '') + '⅓√' + radPart;
+        } else if (Math.abs(Math.abs(coeff) - 0.5) < 1e-6) {
+          term = (coeff < 0 ? '−' : '') + '½√' + radPart;
+        } else if (Math.abs(Math.abs(coeff) - 1) < 1e-6) {
+          term = (coeff < 0 ? '−' : '') + '√' + radPart;
+        } else {
+          term = fmtNum(coeff) + '√' + radPart;
+        }
+
+        if (Math.abs(d) < 1e-8) return term;
+        if (term === '0') return fmtNum(d);
+        return term + (d > 0 ? ' + ' : ' − ') + fmtNum(Math.abs(d));
+      }
+
+      function formatEquationText(p) {
+        const { fn, a, b, c, d } = p;
+        const aStr = a === 1 ? '' : a === -1 ? '−' : fmtNum(a) + ' ';
+        const bStr = b === 1 ? '' : b === -1 ? '−' : fmtNum(b);
+        const cStr = c === 0 ? '' : (c > 0 ? ' + ' : ' − ') + fmtAngle(Math.abs(c));
+        const dStr = d === 0 ? '' : (d > 0 ? ' + ' : ' − ') + fmtNum(Math.abs(d));
+        return `y = ${aStr}${fn}(${bStr}x${cStr})${dStr}`;
+      }
+
+      function formatInnerText(p) {
+        const { b, c } = p;
+        const bStr = b === 1 ? '' : b === -1 ? '−' : fmtNum(b);
+        const cStr = c === 0 ? '' : (c > 0 ? ' + ' : ' − ') + fmtAngle(Math.abs(c));
+        return `${bStr}x${cStr}`;
+      }
+
+      /* =========================================================================
+         4. PARSER PERSAMAAN TRIGONOMETRI UNIVERSAL
+         ========================================================================= */
+      function parseLinearInside(innerRaw) {
+        let s = innerRaw.trim();
+
+        // Bentuk kurung berfaktor: misal 2(x - 30) atau 1/2(x + 60)
+        const factored = s.match(/^([+-]?[^()]*)\((.+)\)$/);
+        if (factored) {
+          const outerB = safeEvalArithmetic(factored[1], Math.PI);
+          const sub = parseLinearInside(factored[2]);
+          if (isFinite(outerB) && outerB !== 0 && sub) {
+            return { b: outerB * sub.b, c: outerB * sub.c };
+          }
+          return null;
+        }
+
+        // Bentuk x/2 atau -x/4 -> (1/2)x atau (-1/4)x
+        s = s.replace(/([+-]?)x\/(\d+(?:\.\d+)?)/g, '$1(1/$2)x');
+
+        // Pola Bx + C
+        const m1 = s.match(/^([+-]?[^x]*)x([+-].+)?$/);
+        if (m1) {
+          const bVal = safeEvalArithmetic(m1[1], Math.PI);
+          const cVal = m1[2] ? safeEvalArithmetic(m1[2], 180) : 0;
+          if (isFinite(bVal) && bVal !== 0 && isFinite(cVal)) {
+            return { b: bVal, c: cVal };
+          }
+        }
+
+        // Pola C + Bx
+        const m2 = s.match(/^([+-]?[^x]+?)([+-][^x]*)x$/);
+        if (m2) {
+          const cVal = safeEvalArithmetic(m2[1], 180);
+          const bVal = safeEvalArithmetic(m2[2], Math.PI);
+          if (isFinite(bVal) && bVal !== 0 && isFinite(cVal)) {
+            return { b: bVal, c: cVal };
+          }
+        }
+
+        return null;
+      }
+
+      function parseTrigEquation(raw) {
+        if (!raw || typeof raw !== 'string') return null;
+        let s = raw
+          .toLowerCase()
+          .replace(/[−–—]/g, '-')
+          .replace(/,/g, '.')
+          .replace(/[*·×]/g, '')
+          .replace(/[°]|derajat|deg/g, '')
+          .replace(/\s+/g, '')
+          .replace(/^(y|f\(x\))=/, '');
+
+        const fnMatch = s.match(/^(.*?)(sin|cos|tan)(.+)$/);
+        if (!fnMatch) return null;
+
+        const aRaw = fnMatch[1];
+        const fn = fnMatch[2];
+        const rest = fnMatch[3];
+
+        const a = safeEvalArithmetic(aRaw, Math.PI);
+        if (!isFinite(a) || a === 0) return null;
+
+        let innerStr = '';
+        let dStr = '';
+
+        if (rest.startsWith('(')) {
+          let depth = 0;
+          let closeIdx = -1;
+          for (let i = 0; i < rest.length; i++) {
+            if (rest[i] === '(') depth++;
+            else if (rest[i] === ')') {
+              depth--;
+              if (depth === 0) {
+                closeIdx = i;
+                break;
+              }
+            }
+          }
+          if (closeIdx === -1) return null;
+          innerStr = rest.slice(1, closeIdx);
+          dStr = rest.slice(closeIdx + 1);
+        } else {
+          // Tanpa tanda kurung setelah sin/cos/tan: misal tan 2x, 2 sin x, 3 tan 1/2 x + 1
+          const noParen = rest.match(/^([+-]?[^x]*x)([+-].+)?$/);
+          if (!noParen) return null;
+          innerStr = noParen[1];
+          dStr = noParen[2] || '';
+        }
+
+        const linear = parseLinearInside(innerStr);
+        if (!linear) return null;
+
+        const d = dStr ? safeEvalArithmetic(dStr, Math.PI) : 0;
+        if (!isFinite(d)) return null;
+
+        return { fn, a, b: linear.b, c: linear.c, d };
+      }
+
+      /* =========================================================================
+         5. PEMBANGUN MODEL MATEMATIS & ANALISIS TITIK ISTIMEWA
+         ========================================================================= */
+      function buildModel(parsed, xMin = 0, xMax = 360) {
+        const { fn, a, b, c, d } = parsed;
+        const isTan = fn === 'tan';
+        const basePeriod = isTan ? 180 : 360;
+        const period = basePeriod / Math.abs(b);
+        const shift = -c / b;
+
+        const thetaGrid = isTan
+          ? [0, 30, 45, 60, 90, 120, 135, 150, 180]
+          : [0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330, 360];
+
+        const testTable = thetaGrid
+          .map(theta => {
+            const x = Number(((theta - c) / b).toFixed(4));
+            const isAsym = isTan && Math.abs(Math.cos(RAD(theta))) < 1e-8;
+            const baseVal = isAsym ? null : Math[fn](RAD(theta));
+            const y = isAsym ? null : a * baseVal + d;
+
+            let role = 'Titik Uji';
+            if (isAsym) {
+              role = 'Asimtot Tegak';
+            } else if (Math.abs(y) < 1e-7) {
+              role = 'Titik Potong Sumbu-X';
+            } else if (isTan && Math.abs(Math.abs(baseVal) - 1) < 1e-6) {
+              role = 'Titik Bantu';
+            } else if (!isTan && Math.abs(baseVal - 1) < 1e-6) {
+              role = a > 0 ? 'Titik Puncak (Maks)' : 'Titik Lembah (Min)';
+            } else if (!isTan && Math.abs(baseVal + 1) < 1e-6) {
+              role = a > 0 ? 'Titik Lembah (Min)' : 'Titik Puncak (Maks)';
+            }
+
+            return {
+              x,
+              theta,
+              isAsym,
+              baseVal,
+              y,
+              exactY: isAsym ? 'Tak Terdefinisi' : fmtExactTrig(a, d, baseVal),
+              role
+            };
+          })
+          .sort((p1, p2) => p1.x - p2.x);
+
+        const pStart = testTable[0].x;
+        const pEnd = testTable[testTable.length - 1].x;
+
+        const xIntercepts = [];
+        const peaks = [];
+        const troughs = [];
+        const asymptotes = [];
+        const helperPoints = [];
+        const snapPoints = [];
+
+        const addSnap = pt => {
+          if (pt.x < xMin - 1e-6 || pt.x > xMax + 1e-6) return;
+          const exists = snapPoints.some(
+            s => Boolean(s.isAsym) === Boolean(pt.isAsym) && Math.abs(s.x - pt.x) < 1e-4
+          );
+          if (!exists) snapPoints.push(pt);
+        };
+
+        const thetaLo = Math.min(b * xMin + c, b * xMax + c);
+        const thetaHi = Math.max(b * xMin + c, b * xMax + c);
+        const kMin = Math.floor(thetaLo / 180) - 2;
+        const kMax = Math.ceil(thetaHi / 180) + 2;
+
+        // 1. Titik Potong Sumbu-X (y = 0)
+        const ratioZero = -d / a;
+        if (isTan) {
+          const baseTheta = DEG(Math.atan(ratioZero));
+          for (let k = kMin; k <= kMax; k++) {
+            const th = baseTheta + k * 180;
+            const x = Number(((th - c) / b).toFixed(4));
+            if (x >= xMin - 1e-6 && x <= xMax + 1e-6) {
+              if (!xIntercepts.some(p => Math.abs(p.x - x) < 1e-4)) {
+                const pt = { x, y: 0, theta: th, isAsym: false, exactY: '0', role: 'Titik Potong Sumbu-X' };
+                xIntercepts.push(pt);
+                addSnap(pt);
+              }
+            }
+          }
+        } else if (Math.abs(ratioZero) <= 1 + 1e-8) {
+          const clamped = Math.max(-1, Math.min(1, ratioZero));
+          const alpha = fn === 'sin' ? DEG(Math.asin(clamped)) : DEG(Math.acos(clamped));
+          const branches = fn === 'sin' ? [alpha, 180 - alpha] : [alpha, -alpha];
+
+          for (let k = Math.floor(kMin / 2) - 1; k <= Math.ceil(kMax / 2) + 1; k++) {
+            branches.forEach(ang => {
+              const th = ang + k * 360;
+              const x = Number(((th - c) / b).toFixed(4));
+              if (x >= xMin - 1e-6 && x <= xMax + 1e-6) {
+                if (!xIntercepts.some(p => Math.abs(p.x - x) < 1e-4)) {
+                  const pt = { x, y: 0, theta: th, isAsym: false, exactY: '0', role: 'Titik Potong Sumbu-X' };
+                  xIntercepts.push(pt);
+                  addSnap(pt);
+                }
+              }
+            });
+          }
+        }
+
+        // 2. Titik Potong Sumbu-Y (x = 0)
+        let yIntercept = null;
+        if (0 >= xMin - 1e-6 && 0 <= xMax + 1e-6) {
+          const th0 = c;
+          const asymAtZero = isTan && Math.abs(Math.cos(RAD(th0))) < 1e-8;
+          if (!asymAtZero) {
+            const b0 = Math[fn](RAD(th0));
+            const y0 = a * b0 + d;
+            yIntercept = {
+              x: 0,
+              y: y0,
+              theta: th0,
+              isAsym: false,
+              exactY: fmtExactTrig(a, d, b0),
+              role: 'Titik Potong Sumbu-Y'
+            };
+            addSnap(yIntercept);
+          }
+        }
+
+        // 3. Asimtot & Titik Bantu (Tan) atau Puncak & Lembah (Sin/Cos)
+        if (isTan) {
+          for (let k = kMin; k <= kMax; k++) {
+            const thAsym = 90 + k * 180;
+            const xAsym = Number(((thAsym - c) / b).toFixed(4));
+            if (xAsym >= xMin - 1e-6 && xAsym <= xMax + 1e-6) {
+              if (!asymptotes.some(v => Math.abs(v - xAsym) < 1e-4)) {
+                asymptotes.push(xAsym);
+                addSnap({
+                  x: xAsym,
+                  y: null,
+                  theta: thAsym,
+                  isAsym: true,
+                  exactY: 'Tak Terdefinisi',
+                  role: 'Asimtot Tegak'
+                });
+              }
+            }
+
+            [45, 135].forEach(off => {
+              const thH = off + k * 180;
+              const xH = Number(((thH - c) / b).toFixed(4));
+              if (xH >= xMin - 1e-6 && xH <= xMax + 1e-6) {
+                const bv = Math.tan(RAD(thH));
+                const yH = a * bv + d;
+                const pt = {
+                  x: xH,
+                  y: yH,
+                  theta: thH,
+                  isAsym: false,
+                  exactY: fmtExactTrig(a, d, bv),
+                  role: 'Titik Bantu'
+                };
+                if (!helperPoints.some(p => Math.abs(p.x - xH) < 1e-4)) {
+                  helperPoints.push(pt);
+                  addSnap(pt);
+                }
+              }
+            });
+          }
+        } else {
+          const thetaPlus = fn === 'sin' ? 90 : 0;
+          const thetaMinus = fn === 'sin' ? 270 : 180;
+
+          for (let k = Math.floor(kMin / 2) - 1; k <= Math.ceil(kMax / 2) + 1; k++) {
+            const th1 = thetaPlus + k * 360;
+            const x1 = Number(((th1 - c) / b).toFixed(4));
+            if (x1 >= xMin - 1e-6 && x1 <= xMax + 1e-6) {
+              const y1 = a + d;
+              const isPeak = a > 0;
+              const pt1 = {
+                x: x1,
+                y: y1,
+                theta: th1,
+                isAsym: false,
+                exactY: fmtNum(y1),
+                role: isPeak ? 'Titik Puncak (Maks)' : 'Titik Lembah (Min)'
+              };
+              if (isPeak) {
+                if (!peaks.some(p => Math.abs(p.x - x1) < 1e-4)) peaks.push(pt1);
+              } else {
+                if (!troughs.some(p => Math.abs(p.x - x1) < 1e-4)) troughs.push(pt1);
+              }
+              addSnap(pt1);
+            }
+
+            const th2 = thetaMinus + k * 360;
+            const x2 = Number(((th2 - c) / b).toFixed(4));
+            if (x2 >= xMin - 1e-6 && x2 <= xMax + 1e-6) {
+              const y2 = -a + d;
+              const isPeak = a < 0;
+              const pt2 = {
+                x: x2,
+                y: y2,
+                theta: th2,
+                isAsym: false,
+                exactY: fmtNum(y2),
+                role: isPeak ? 'Titik Puncak (Maks)' : 'Titik Lembah (Min)'
+              };
+              if (isPeak) {
+                if (!peaks.some(p => Math.abs(p.x - x2) < 1e-4)) peaks.push(pt2);
+              } else {
+                if (!troughs.some(p => Math.abs(p.x - x2) < 1e-4)) troughs.push(pt2);
+              }
+              addSnap(pt2);
+            }
+          }
+        }
+
+        // Titik sudut istimewa tambahan agar magnetic snap halus di seluruh domain
+        for (let k = kMin; k <= kMax; k++) {
+          [0, 30, 45, 60, 120, 135, 150].forEach(off => {
+            const th = k * 180 + off;
+            const x = Number(((th - c) / b).toFixed(4));
+            if (x >= xMin - 1e-6 && x <= xMax + 1e-6) {
+              const bv = Math[fn](RAD(th));
+              const y = a * bv + d;
+              addSnap({
+                x,
+                y,
+                theta: th,
+                isAsym: false,
+                exactY: fmtExactTrig(a, d, bv),
+                role: 'Titik Sudut Istimewa'
+              });
+            }
+          });
+        }
+
+        xIntercepts.sort((u, v) => u.x - v.x);
+        peaks.sort((u, v) => u.x - v.x);
+        troughs.sort((u, v) => u.x - v.x);
+        asymptotes.sort((u, v) => u - v);
+        helperPoints.sort((u, v) => u.x - v.x);
+        snapPoints.sort((u, v) => u.x - v.x);
+
+        // Susun Chip Titik Cepat untuk 1 siklus awal di dalam domain
+        const quickChips = [];
+        const inDomainTest = testTable.filter(t => t.x >= xMin - 1e-5 && t.x <= xMax + 1e-5);
+        const preferredThetas = isTan ? [0, 45, 90, 135, 180] : [0, 90, 180, 270, 360];
+        preferredThetas.forEach(th => {
+          const found = inDomainTest.find(t => Math.abs(t.theta - th) < 1e-4);
+          if (found) quickChips.push(found);
+        });
+        if (quickChips.length < 3) {
+          snapPoints.slice(0, 6).forEach(sp => {
+            if (!quickChips.some(q => Math.abs(q.x - sp.x) < 1e-4)) quickChips.push(sp);
+          });
+        }
+
+        return {
+          ...parsed,
+          xMin,
+          xMax,
+          period,
+          shift,
+          pStart,
+          pEnd,
+          maxValue: isTan ? null : d + Math.abs(a),
+          minValue: isTan ? null : d - Math.abs(a),
+          testTable,
+          xIntercepts,
+          yIntercept,
+          peaks,
+          troughs,
+          asymptotes,
+          helperPoints,
+          snapPoints,
+          quickChips
+        };
+      }
+
+      /* =========================================================================
+         6. STATE APLIKASI
+         ========================================================================= */
+      const initialParsed = parseTrigEquation('y = tan(2x)');
+      const initialModel = buildModel(initialParsed, 0, 360);
+
+      const state = {
+        activeTab: 'tan',
+        activePresetId: 'tan2',
+        model: initialModel,
+        step: 1,
+        angleUnit: 'deg',
+        animProgress: 1,
+        animFrameId: null,
+        hoverPoint: null,
+        pinnedPoint: null,
+        isFullscreen: false,
+        initialized: false
+      };
+
+      /* =========================================================================
+         7. RENDER PRESET, CHIP CEPAT, DAN PANEL 6 LANGKAH
+         ========================================================================= */
+      function renderPresets() {
+        const isTanTab = state.activeTab === 'tan';
+        const list = isTanTab ? TAN_PRESETS : SINCOS_PRESETS;
+
+        $('tabTanBtn').style.backgroundColor = isTanTab ? 'var(--curve)' : 'transparent';
+        $('tabTanBtn').style.color = isTanTab ? '#ffffff' : 'var(--text-muted)';
+        $('tabSinCosBtn').style.backgroundColor = !isTanTab ? 'var(--accent)' : 'transparent';
+        $('tabSinCosBtn').style.color = !isTanTab ? '#ffffff' : 'var(--text-muted)';
+
+        $('presetHintText').textContent = isTanTab
+          ? 'Pilih soal anggota kelompok (1 orang 1 soal) · Periode dasar tan = 180°'
+          : 'Contoh variasi Sinus & Kosinus · Periode dasar sin/cos = 360°';
+
+        $('presetList').innerHTML = list
+          .map(item => {
+            const active = item.id === state.activePresetId;
+            const activeColor = isTanTab ? 'var(--curve)' : 'var(--accent)';
+            return `
+              <button
+                type="button"
+                data-preset-id="${item.id}"
+                data-eq="${item.eq}"
+                class="btn-touch px-3.5 py-2 rounded-xl text-xs sm:text-sm font-mono-math font-bold border ${active ? 'text-white shadow-sm' : ''}"
+                style="${active ? `background-color: ${activeColor}; border-color: ${activeColor};` : 'background-color: var(--surface); border-color: var(--border); color: var(--text);'}"
+              >
+                ${item.label}
+              </button>
+            `;
+          })
+          .join('');
+      }
+
+      function renderQuickChips() {
+        const chips = state.model.quickChips || [];
+        $('quickChipCount').textContent = `${chips.length} titik utama`;
+        $('quickPointChips').innerHTML = chips
+          .map(pt => {
+            const isPinned = state.pinnedPoint && Math.abs(state.pinnedPoint.x - pt.x) < 1e-4;
+            const label = pt.isAsym
+              ? `Asimtot ${fmtAngle(pt.x)}`
+              : `(${fmtAngle(pt.x)} ; ${pt.exactY})`;
+            return `
+              <button
+                type="button"
+                data-pin-x="${pt.x}"
+                class="btn-touch px-3 py-1.5 rounded-xl text-xs font-mono-math font-bold border ${isPinned ? 'text-white shadow-sm' : ''}"
+                style="${isPinned ? 'background-color: var(--pin); border-color: var(--pin);' : `background-color: var(--surface); border-color: var(--border); color: ${pt.isAsym ? 'var(--asym)' : 'var(--text)'};`}"
+              >
+                ${label}
+              </button>
+            `;
+          })
+          .join('');
+      }
+
+      function updateHeaders() {
+        const M = state.model;
+        const eqLabel = formatEquationText(M);
+        const rangeLabel = `${fmtAngle(M.xMin)} ≤ x ≤ ${fmtAngle(M.xMax)}`;
+
+        $('activeEqHeading').textContent = `${eqLabel} · (${rangeLabel})`;
+        $('fsEqBadge').textContent = `${eqLabel} (${rangeLabel})`;
+        $('compareBaseLabel').textContent = `Bandingkan grafik dasar (y = ${M.fn} x)`;
+        $('boundsLayerText').textContent = M.fn === 'tan' ? 'Garis Asimtot' : 'Garis Batas Maks/Min';
+      }
+
+      function renderStepPanel() {
+        const M = state.model;
+        const { fn, a, b, c, d, period, shift, pStart, pEnd, testTable, xIntercepts, yIntercept, peaks, troughs, asymptotes, maxValue, minValue, xMin, xMax } = M;
+        const isTan = fn === 'tan';
+        const eqText = formatEquationText(M);
+        const innerText = formatInnerText(M);
+
+        // Langkah 1 · Tabel Uji Titik Istimewa
+        const step1Html = `
+          <div class="tintcard p-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-xs font-bold uppercase" style="color: var(--accent);">Langkah 1 · Tabel Uji Titik Istimewa</span>
+              <h3 class="text-base font-extrabold">Substitusi Sudut pada <span class="font-mono-math" style="color: var(--curve);">${eqText}</span></h3>
+            </div>
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg border" style="background-color: var(--surface); border-color: var(--border);">
+              Ketuk baris untuk pin di grafik
+            </span>
+          </div>
+          <p class="text-xs sm:text-sm">
+            Pilih sudut-sudut istimewa untuk <b class="font-mono-math">${innerText}</b> pada 1 periode pertama (<b class="font-mono-math">${fmtAngle(pStart)}</b> s.d. <b class="font-mono-math">${fmtAngle(pEnd)}</b>), lalu tentukan nilai <b class="font-mono-math">x</b> dan <b class="font-mono-math">y</b>:
+          </p>
+          <div class="table-scroll overflow-x-auto rounded-xl border" style="border-color: var(--border);">
+            <table class="w-full text-xs sm:text-sm text-left border-collapse">
+              <thead>
+                <tr style="background-color: var(--surface-soft); border-bottom: 1px solid var(--border);">
+                  <th class="py-2.5 px-3 font-bold">x</th>
+                  <th class="py-2.5 px-3 font-bold font-mono-math">${innerText}</th>
+                  <th class="py-2.5 px-3 font-bold">y</th>
+                  <th class="py-2.5 px-3 font-bold">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y" style="border-color: var(--border);">
+                ${testTable
+                  .map((row, idx) => {
+                    const isSel = state.pinnedPoint && Math.abs(state.pinnedPoint.x - row.x) < 1e-4;
+                    return `
+                      <tr class="test-row ${isSel ? 'is-pinned-row' : ''}" data-test-idx="${idx}">
+                        <td class="py-2.5 px-3 font-mono-math font-bold">${fmtAngle(row.x)}</td>
+                        <td class="py-2.5 px-3 font-mono-math">${fmtAngle(row.theta)}</td>
+                        <td class="py-2.5 px-3 font-mono-math font-bold" style="color: ${row.isAsym ? 'var(--asym)' : 'var(--curve)'};">
+                          ${row.exactY}
+                        </td>
+                        <td class="py-2.5 px-3 text-xs">
+                          <span class="px-2 py-0.5 rounded-full font-semibold border" style="background-color: var(--surface-soft); border-color: var(--border);">
+                            ${row.role}
+                          </span>
+                        </td>
+                      </tr>
+                    `;
+                  })
+                  .join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        // Langkah 2 · Plot Titik & Garis Batas / Asimtot
+        const step2Html = `
+          <div class="tintcard p-3">
+            <span class="text-xs font-bold uppercase" style="color: var(--asym);">Langkah 2 · Plot Titik &amp; Garis Batas / Asimtot</span>
+            <h3 class="text-base font-extrabold">Memetakan Titik ke Bidang Koordinat</h3>
+          </div>
+          <p>
+            Pasangkan nilai <b class="font-mono-math">(x ; y)</b> dari tabel ke kertas milimeter blok:
+          </p>
+          ${
+            isTan
+              ? `
+              <ul class="list-disc pl-5 space-y-2 text-xs sm:text-sm">
+                <li>
+                  <b style="color: var(--asym);">Garis Asimtot Tegak (Merah Putus-putus):</b> digambar pada <b class="font-mono-math">${asymptotes.map(x => 'x = ' + fmtAngle(x)).join(', ')}</b> karena nilai <b class="font-mono-math">tan(90° + k·180°)</b> tak terdefinisi. Kurva mendekati garis ini sedekat mungkin tanpa pernah memotongnya.
+                </li>
+                <li>
+                  <b>Titik Potong &amp; Titik Bantu:</b> titik potong sumbu-X (<b class="font-mono-math">y = ${fmtNum(d)}</b>) menjadi pusat simetri tiap cabang, sementara titik bantu (<b class="font-mono-math">tan = ±1</b>) mengarahkan kelengkungan kurva.
+                </li>
+              </ul>
+              `
+              : `
+              <ul class="list-disc pl-5 space-y-2 text-xs sm:text-sm">
+                <li>
+                  <b style="color: var(--midline);">Garis Tengah (y = ${fmtNum(d)}):</b> sumbu keseimbangan horizontal gelombang.
+                </li>
+                <li>
+                  <b style="color: var(--asym);">Garis Batas Maksimum &amp; Minimum:</b> batas atas <b class="font-mono-math">y = ${fmtNum(maxValue)}</b> dan batas bawah <b class="font-mono-math">y = ${fmtNum(minValue)}</b> membatasi tinggi bukit dan kedalaman lembah gelombang.
+                </li>
+              </ul>
+              `
+          }
+        `;
+
+        // Langkah 3 · Kurva 1 Periode Penuh
+        const step3Html = `
+          <div class="tintcard p-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-xs font-bold uppercase" style="color: var(--curve);">Langkah 3 · Kurva 1 Periode Penuh</span>
+              <h3 class="text-base font-extrabold">Siklus Lengkap Pertama (<span class="font-mono-math">${fmtAngle(pStart)}</span> – <span class="font-mono-math">${fmtAngle(pEnd)}</span>)</h3>
+            </div>
+            <button
+              id="replayAnimBtn"
+              type="button"
+              class="btn-touch px-3 py-1.5 rounded-xl text-xs font-bold text-white"
+              style="background-color: var(--curve);"
+            >
+              ↻ Putar Ulang Animasi
+            </button>
+          </div>
+          <p>
+            Hubungkan titik-titik pada 1 periode pertama dari <b class="font-mono-math">x = ${fmtAngle(pStart)}</b> hingga <b class="font-mono-math">x = ${fmtAngle(pEnd)}</b> (lebar 1 periode = <b class="font-mono-math">${fmtAngle(period)}</b>):
+          </p>
+          <div class="subcard p-3 text-xs sm:text-sm space-y-1.5">
+            <div class="font-bold" style="color: var(--accent);">Perubahan Nilai dalam 1 Siklus:</div>
+            <p style="color: var(--text-muted);">
+              ${
+                isTan
+                  ? a > 0
+                    ? `Dari titik awal, kurva <b>naik tajam</b> mendekati garis asimtot menuju <b class="font-mono-math">+∞</b>, <b>terputus tepat di garis asimtot</b>, lalu muncul kembali dari bawah (<b class="font-mono-math">−∞</b>) membentuk cabang kurva baru hingga kembali memotong sumbu di <b class="font-mono-math">x = ${fmtAngle(pEnd)}</b>.`
+                    : `Karena koefisien <b class="font-mono-math">A &lt; 0</b>, kurva bergerak <b>turun</b> mendekati asimtot menuju <b class="font-mono-math">−∞</b>, terputus di asimtot, lalu muncul kembali dari atas (<b class="font-mono-math">+∞</b>) membentuk cabang baru hingga genap 1 periode (<b class="font-mono-math">${fmtAngle(period)}</b>).`
+                  : `Kurva berosilasi mulus membentuk tepat 1 bukit dan 1 lembah penuh dalam rentang horizontal <b class="font-mono-math">${fmtAngle(period)}</b>.`
+              }
+            </p>
+          </div>
+        `;
+
+        // Langkah 4 · Perulangan Pola Penuh
+        const waveCount = (xMax - xMin) / period;
+        const step4Html = `
+          <div class="tintcard p-3">
+            <span class="text-xs font-bold uppercase" style="color: var(--accent);">Langkah 4 · Perulangan Pola Penuh</span>
+            <h3 class="text-base font-extrabold">Mengulang Pola ke Domain <span class="font-mono-math">${fmtAngle(xMin)} ≤ x ≤ ${fmtAngle(xMax)}</span></h3>
+          </div>
+          <p>
+            Karena fungsi <b class="font-mono-math">${fn}</b> bersifat periodik dengan periode <b class="font-mono-math">${fmtAngle(period)}</b>, pola kurva pada Langkah 3 diulang secara identik di sepanjang domain.
+          </p>
+          <div class="subcard p-3 text-xs sm:text-sm space-y-1">
+            <div class="font-bold">Banyaknya Gelombang / Siklus Terbentuk:</div>
+            <p>
+              Rentang domain <b class="font-mono-math">${fmtAngle(xMax - xMin)} ÷ ${fmtAngle(period)} = ${fmtNum(waveCount)} siklus penuh</b> identik pada grafik.
+            </p>
+          </div>
+        `;
+
+        // Langkah 5 · Analisis Titik-Titik Istimewa
+        const makePinBadges = (pts, colorVar, emptyText) => {
+          if (!pts || pts.length === 0) {
+            return `<span class="text-xs" style="color: var(--text-muted);">${emptyText}</span>`;
+          }
+          return pts
+            .map(
+              pt => `
+                <button
+                  type="button"
+                  data-pin-x="${pt.x}"
+                  class="btn-touch px-2.5 py-1 rounded-xl text-xs font-mono-math font-bold border"
+                  style="background-color: var(--surface); border-color: var(--border); color: var(${colorVar});"
+                >
+                  (${fmtAngle(pt.x)} ; ${pt.exactY || fmtNum(pt.y)})
+                </button>
+              `
+            )
+            .join('');
+        };
+
+        const step5Html = `
+          <div class="tintcard p-3">
+            <span class="text-xs font-bold uppercase" style="color: var(--intercept);">Langkah 5 · Analisis Titik-Titik Istimewa</span>
+            <h3 class="text-base font-extrabold">Komponen Penting Grafik (Ketuk untuk Sorot)</h3>
+          </div>
+          <div class="space-y-2.5 text-xs sm:text-sm">
+            <div class="subcard p-3 space-y-1.5">
+              <div class="font-bold" style="color: var(--intercept);">
+                1) Titik Potong Sumbu-X (y = 0) — ${xIntercepts.length} titik:
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                ${makePinBadges(xIntercepts, '--intercept', 'Tidak memotong sumbu-X pada interval ini.')}
+              </div>
+              <div class="pt-1.5 border-t text-xs" style="border-color: var(--border);">
+                <b>2) Titik Potong Sumbu-Y (x = 0):</b>
+                ${
+                  yIntercept
+                    ? `<button type="button" data-pin-x="0" class="btn-touch ml-1 px-2.5 py-1 rounded-lg font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border); color: var(--intercept);">(0 ; ${yIntercept.exactY})</button>`
+                    : `<span style="color: var(--text-muted);">Tidak ada (berada di luar domain atau tepat pada asimtot).</span>`
+                }
+              </div>
+            </div>
+
+            ${
+              isTan
+                ? `
+                <div class="subcard p-3 border-l-4 space-y-1.5" style="border-left-color: var(--curve);">
+                  <div class="font-bold" style="color: var(--curve);">
+                    3) Titik Puncak &amp; Nilai Maksimum: TIDAK ADA
+                  </div>
+                  <p class="text-xs" style="color: var(--text-muted);">
+                    Kurva tangen terus naik memanjang menuju <b class="font-mono-math">+∞</b> di dekat asimtot sehingga tidak memiliki titik puncak maupun nilai maksimum.
+                  </p>
+                  <div class="font-bold pt-1" style="color: var(--curve);">
+                    4) Titik Lembah &amp; Nilai Minimum: TIDAK ADA
+                  </div>
+                  <p class="text-xs" style="color: var(--text-muted);">
+                    Kurva tangen terus turun memanjang menuju <b class="font-mono-math">−∞</b> sehingga tidak memiliki titik lembah maupun nilai minimum.
+                  </p>
+                </div>
+
+                <div class="subcard p-3 space-y-1.5">
+                  <div class="font-bold" style="color: var(--asym);">
+                    5) Garis Asimtot Tegak (${asymptotes.length} garis batas):
+                  </div>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${
+                      asymptotes.length > 0
+                        ? asymptotes
+                            .map(
+                              ax => `<button type="button" data-pin-x="${ax}" class="btn-touch px-2.5 py-1 rounded-xl text-xs font-mono-math font-bold border" style="background-color: var(--surface); border-color: var(--border); color: var(--asym);">x = ${fmtAngle(ax)}</button>`
+                            )
+                            .join('')
+                        : '<span class="text-xs">Tidak ada asimtot pada interval ini.</span>'
+                    }
+                  </div>
+                </div>
+                `
+                : `
+                <div class="subcard p-3 space-y-1.5">
+                  <div class="font-bold" style="color: var(--extrema);">
+                    3) Titik Puncak &amp; Nilai Maksimum (y<sub>maks</sub> = ${fmtNum(maxValue)}):
+                  </div>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${makePinBadges(peaks, '--extrema', 'Tidak mencapai titik puncak pada interval ini.')}
+                  </div>
+                </div>
+
+                <div class="subcard p-3 space-y-1.5">
+                  <div class="font-bold" style="color: var(--midline);">
+                    4) Titik Lembah &amp; Nilai Minimum (y<sub>min</sub> = ${fmtNum(minValue)}):
+                  </div>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${makePinBadges(troughs, '--midline', 'Tidak mencapai titik lembah pada interval ini.')}
+                  </div>
+                </div>
+                `
+            }
+          </div>
+        `;
+
+        // Langkah 6 · Kesimpulan, Bentuk Umum & Cue Card Tanya-Jawab Presenter
+        const sampleHalfAngle = fmtAngle(45 / Math.abs(b));
+        const step6Html = `
+          <div class="tintcard p-3">
+            <span class="text-xs font-bold uppercase" style="color: var(--extrema);">Langkah 6 · Kesimpulan &amp; Bentuk Umum</span>
+            <h3 class="text-base font-extrabold">Kaitan dengan <span class="font-mono-math">y = A · ${fn}(Bx + C) + D</span></h3>
+          </div>
+
+          <div class="subcard p-3 space-y-2 text-xs sm:text-sm">
+            <div class="text-center py-2 px-3 rounded-xl font-mono-math text-sm sm:text-base font-extrabold border" style="background-color: var(--surface); border-color: var(--border);">
+              y = <span style="color: var(--accent);">A</span> · ${fn}(<span style="color: var(--curve);">B</span>x + <span style="color: var(--pin);">C</span>) + <span style="color: var(--midline);">D</span>
+            </div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>
+                <b style="color: var(--accent);">A = ${fmtNum(a)}:</b>
+                ${
+                  isTan
+                    ? `Faktor regangan vertikal (tangen tidak punya amplitudo). Mengatur titik bantu pada <b class="font-mono-math">y = D ± |A|</b>${a < 0 ? ' dan mencerminkan kurva secara vertikal.' : '.'}`
+                    : `Amplitudo <b class="font-mono-math">|A| = ${fmtNum(Math.abs(a))}</b>${a < 0 ? ' (tanda minus membalik bukit &amp; lembah).' : '.'}`
+                }
+              </li>
+              <li>
+                <b style="color: var(--curve);">B = ${fmtNum(b)}:</b>
+                Periode grafik <b class="font-mono-math">P = ${isTan ? '180°' : '360°'} / |${fmtNum(b)}| = ${fmtAngle(period)}</b>.
+              </li>
+              <li>
+                <b style="color: var(--pin);">C = ${fmtAngle(c)}:</b>
+                ${
+                  c === 0
+                    ? 'Pergeseran fase = 0 (tidak bergeser horizontal).'
+                    : `Pergeseran fase <b class="font-mono-math">−C/B = ${fmtAngle(shift)}</b> (${shift > 0 ? 'geser ke kanan' : 'geser ke kiri'}).`
+                }
+              </li>
+              <li>
+                <b style="color: var(--midline);">D = ${fmtNum(d)}:</b>
+                ${
+                  d === 0
+                    ? 'Pergeseran vertikal = 0 (garis tengah <b class="font-mono-math">y = 0</b>).'
+                    : `Pergeseran vertikal <b>${d > 0 ? 'ke atas' : 'ke bawah'}</b> sejauh <b class="font-mono-math">${fmtNum(Math.abs(d))}</b> (garis tengah <b class="font-mono-math">y = ${fmtNum(d)}</b>).`
+                }
+              </li>
+            </ul>
+          </div>
+
+          <!-- Kartu Pegangan Tanya-Jawab Presenter -->
+          <div class="p-3 rounded-xl border-2 space-y-2 text-xs" style="background-color: var(--surface-tint); border-color: var(--accent);">
+            <div class="font-extrabold uppercase tracking-wider flex items-center gap-1.5" style="color: var(--accent);">
+              <span>🎤 Kartu Pegangan Tanya-Jawab Presenter</span>
+            </div>
+            <div class="space-y-2 leading-relaxed">
+              <div>
+                <b>1. Kenapa periode tan pakai 180°, sedangkan sin/cos 360°?</b><br />
+                <span style="color: var(--text-muted);">Pada lingkaran satuan, nilai <b class="font-mono-math">tan(θ + 180°) = tan(θ)</b> (kuadran I &amp; III sama-sama positif, II &amp; IV sama-sama negatif), sehingga polanya sudah berulang setiap setengah putaran (<b class="font-mono-math">180°</b>).</span>
+              </div>
+              <div>
+                <b>2. Kenapa rumus periode harus dibagi |B|?</b><br />
+                <span style="color: var(--text-muted);">Koefisien <b class="font-mono-math">B</b> mempercepat sudut sebesar <b class="font-mono-math">|B|</b> kali lipat. Untuk menyelesaikan 1 siklus penuh (<b class="font-mono-math">${isTan ? '180°' : '360°'}</b>), nilai <b class="font-mono-math">x</b> hanya butuh <b class="font-mono-math">${isTan ? '180°' : '360°'} / |B| = ${fmtAngle(period)}</b>.</span>
+              </div>
+              <div>
+                <b>3. Kenapa muncul cabang kurva baru setelah asimtot?</b><br />
+                <span style="color: var(--text-muted);">Tepat di <b class="font-mono-math">90°</b> nilai <b class="font-mono-math">cos(90°) = 0</b> sehingga <b class="font-mono-math">tan = sin/cos</b> tak terdefinisi (terputus). Sesaat sebelum <b class="font-mono-math">90°</b> nilainya <b class="font-mono-math">+∞</b>, dan sesaat setelah <b class="font-mono-math">90°</b> (kuadran II) nilainya berbalik menjadi <b class="font-mono-math">−∞</b>.</span>
+              </div>
+              <div>
+                <b>4. Kenapa memakai sudut uji seperti ${sampleHalfAngle}?</b><br />
+                <span style="color: var(--text-muted);">Karena saat disubstitusi ke <b class="font-mono-math">${innerText}</b>, sudut tersebut menghasilkan sudut istimewa <b class="font-mono-math">45°</b> sehingga nilai fungsinya bilangan bulat (<b class="font-mono-math">±1</b>) yang sangat mudah diplot pada kertas milimeter blok.</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const stepsMap = { 1: step1Html, 2: step2Html, 3: step3Html, 4: step4Html, 5: step5Html, 6: step6Html };
+        $('stepContent').innerHTML = stepsMap[state.step];
+        $('stepCounter').textContent = `Langkah ${state.step} / 6`;
+        $('prevStepBtn').disabled = state.step === 1;
+        $('nextStepBtn').disabled = state.step === 6;
+
+        $('stepChips').innerHTML = STEP_TITLES.map((title, idx) => {
+          const num = idx + 1;
+          const active = num === state.step;
+          return `
+            <button
+              type="button"
+              data-step="${num}"
+              class="btn-touch px-2.5 py-2 rounded-xl text-xs font-bold text-center border ${active ? 'text-white shadow-sm' : ''}"
+              style="${active ? 'background-color: var(--accent); border-color: var(--accent);' : 'background-color: var(--surface-soft); border-color: var(--border); color: var(--text);'}"
+            >
+              ${title}
+            </button>
+          `;
+        }).join('');
+      }
+
+      /* =========================================================================
+         8. KARTU KOORDINAT TERPILIH & SUBSTITUSI LANGKAH DEMI LANGKAH
+         ========================================================================= */
+      function buildSubstitutionText(pt) {
+        const M = state.model;
+        const { fn, a, b, c, d } = M;
+        const theta = b * pt.x + c;
+        const aStr = a === 1 ? '' : a === -1 ? '−' : fmtNum(a) + ' · ';
+        const dStr = d === 0 ? '' : (d > 0 ? ' + ' : ' − ') + fmtNum(Math.abs(d));
+
+        const bPart = b === 1 ? '' : `${fmtNum(b)} × `;
+        const cPart = c === 0 ? '' : (c > 0 ? ' + ' : ' − ') + fmtAngle(Math.abs(c));
+        const substInside = `${bPart}${fmtAngle(pt.x)}${cPart}`;
+
+        if (pt.isAsym) {
+          return `Substitusi <b class="font-mono-math">x = ${fmtAngle(pt.x)}</b>:<br/><span class="font-mono-math">y = ${aStr}tan(${substInside})${dStr} = ${aStr}tan(${fmtAngle(theta)})${dStr} = <b>Tak Terdefinisi (Garis Asimtot Tegak)</b></span>`;
+        }
+
+        const rawFn = Math[fn](RAD(theta));
+        const exactFn = fmtExactTrig(1, 0, rawFn);
+        const exactTotal = pt.exactY && pt.exactY !== 'Tak Terdefinisi' ? pt.exactY : fmtExactTrig(a, d, rawFn);
+        const decVal = fmtNum(pt.y);
+
+        return `Substitusi <b class="font-mono-math">x = ${fmtAngle(pt.x)}</b>:<br/><span class="font-mono-math">y = ${aStr}${fn}(${substInside})${dStr} = ${aStr}${fn}(${fmtAngle(theta)})${dStr} = ${aStr}${exactFn}${dStr} = <b>${exactTotal}</b>${exactTotal !== decVal ? ` (≈ ${decVal})` : ''}</span>`;
+      }
+
+      function setPinnedPoint(pt) {
+        state.pinnedPoint = { ...pt };
+        const card = $('pinnedCard');
+        card.classList.remove('hidden');
+
+        const exactStr = pt.isAsym ? 'Tak Terdefinisi' : (pt.exactY || fmtNum(pt.y));
+        const decStr = pt.isAsym ? 'Asimtot Tegak (∞)' : fmtNum(pt.y);
+
+        $('pinnedCoordTitle').textContent = `(${fmtAngle(pt.x)} ; ${exactStr})`;
+        $('pinnedRoleBadge').textContent = pt.role || 'Titik pada Kurva';
+        $('pinnedRoleBadge').style.color = pt.isAsym ? 'var(--asym)' : 'var(--extrema)';
+        $('pinnedValueForms').textContent = pt.isAsym
+          ? `Persamaan Garis Batas: x = ${fmtAngle(pt.x)}`
+          : `Nilai Eksak: y = ${exactStr}   |   Nilai Desimal: y = ${decStr}`;
+        $('pinnedCalcText').innerHTML = buildSubstitutionText(pt);
+
+        renderQuickChips();
+        if (state.step === 1) {
+          renderStepPanel();
+        }
+        drawCanvas();
+      }
+
+      function clearPinnedPoint() {
+        state.pinnedPoint = null;
+        $('pinnedCard').classList.add('hidden');
+        renderQuickChips();
+        if (state.step === 1) {
+          renderStepPanel();
+        }
+        drawCanvas();
+      }
+
+      function pinByX(targetX) {
+        const snap = state.model.snapPoints.find(p => Math.abs(p.x - targetX) < 1e-3);
+        if (snap) {
+          setPinnedPoint(snap);
+        } else {
+          const M = state.model;
+          const theta = M.b * targetX + M.c;
+          const isAsym = M.fn === 'tan' && Math.abs(Math.cos(RAD(theta))) < 1e-7;
+          const bv = isAsym ? null : Math[M.fn](RAD(theta));
+          setPinnedPoint({
+            x: targetX,
+            y: isAsym ? null : M.a * bv + M.d,
+            theta,
+            isAsym,
+            exactY: isAsym ? 'Tak Terdefinisi' : fmtExactTrig(M.a, M.d, bv),
+            role: isAsym ? 'Asimtot Tegak' : 'Titik pada Kurva'
+          });
+        }
+      }
+
+      /* =========================================================================
+         9. PENGGAMBARAN KANVAS MILIMETER BLOK (DENGAN FALLBACK LEBAR >= 300px)
+         ========================================================================= */
+      let layoutInfo = null;
+
+      function computeViewport() {
+        const M = state.model;
+        const spanX = Math.max(30, M.xMax - M.xMin);
+        const padX = spanX * 0.045;
+        const xmin = M.xMin - padX;
+        const xmax = M.xMax + padX;
+
+        const spanY = M.fn === 'tan'
+          ? Math.max(3.5, Math.abs(M.a) * 3.2)
+          : Math.max(2.5, Math.abs(M.a) * 1.45);
+        const ymin = Math.min(M.d - spanY, -1.2);
+        const ymax = Math.max(M.d + spanY, 1.2);
+
+        return { xmin, xmax, ymin, ymax };
+      }
+
+      function drawCanvas() {
+        const cv = $('graphCanvas');
+        const wrap = $('canvasWrap');
+        if (!cv || !wrap) return;
+
+        // Pengukuran lebar aman anti-0px untuk mobile WebView
+        const rect = wrap.getBoundingClientRect();
+        const width = Math.max(Math.floor(rect.width), 300);
+        const heightPx = state.isFullscreen
+          ? Math.max(340, Math.min(540, window.innerHeight - 230))
+          : Math.round(Math.max(310, Math.min(460, width * 0.58)));
+
+        const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+        cv.width = Math.round(width * dpr);
+        cv.height = Math.round(heightPx * dpr);
+        cv.style.height = heightPx + 'px';
+
+        const ctx = cv.getContext('2d');
+        if (!ctx) return;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const cs = getComputedStyle(document.documentElement);
+        const col = name => cs.getPropertyValue(name).trim() || '#0f172a';
+
+        const M = state.model;
+        const V = computeViewport();
+        const padL = 46;
+        const padR = 16;
+        const padT = 22;
+        const padB = 34;
+        const plotW = width - padL - padR;
+        const plotH = heightPx - padT - padB;
+
+        const toX = x => padL + ((x - V.xmin) / (V.xmax - V.xmin)) * plotW;
+        const toY = y => padT + ((V.ymax - y) / (V.ymax - V.ymin)) * plotH;
+        const fromX = px => V.xmin + ((px - padL) / plotW) * (V.xmax - V.xmin);
+
+        layoutInfo = { padL, padR, padT, padB, plotW, plotH, V, toX, toY, fromX };
+
+        // 1. Latar kertas milimeter blok
+        ctx.fillStyle = col('--paper');
+        ctx.fillRect(0, 0, width, heightPx);
+
+        const spanX = M.xMax - M.xMin;
+        const majorStepX = spanX <= 180 ? 30 : spanX <= 420 ? 45 : 90;
+        const minorStepX = 15;
+        const spanY = V.ymax - V.ymin;
+        const majorStepY = spanY <= 10 ? 1 : spanY <= 22 ? 2 : 5;
+        const minorStepY = majorStepY / 4;
+
+        // Grid Minor
+        ctx.lineWidth = 0.8;
+        ctx.strokeStyle = col('--grid-minor');
+        ctx.beginPath();
+        for (let gx = Math.ceil(V.xmin / minorStepX) * minorStepX; gx <= V.xmax; gx += minorStepX) {
+          const px = toX(gx);
+          ctx.moveTo(px, padT);
+          ctx.lineTo(px, padT + plotH);
+        }
+        for (let gy = Math.ceil(V.ymin / minorStepY) * minorStepY; gy <= V.ymax; gy += minorStepY) {
+          const py = toY(gy);
+          ctx.moveTo(padL, py);
+          ctx.lineTo(padL + plotW, py);
+        }
+        ctx.stroke();
+
+        // Grid Mayor
+        ctx.lineWidth = 1.15;
+        ctx.strokeStyle = col('--grid-major');
+        ctx.beginPath();
+        for (let gx = Math.ceil(V.xmin / majorStepX) * majorStepX; gx <= V.xmax; gx += majorStepX) {
+          const px = toX(gx);
+          ctx.moveTo(px, padT);
+          ctx.lineTo(px, padT + plotH);
+        }
+        for (let gy = Math.ceil(V.ymin / majorStepY) * majorStepY; gy <= V.ymax; gy += majorStepY) {
+          const py = toY(gy);
+          ctx.moveTo(padL, py);
+          ctx.lineTo(padL + plotW, py);
+        }
+        ctx.stroke();
+
+        // 2. Sumbu X dan Sumbu Y tebal dengan panah
+        const axisCol = col('--axis');
+        const yZero = toY(0);
+        const xZero = toX(0);
+
+        ctx.strokeStyle = axisCol;
+        ctx.fillStyle = axisCol;
+        ctx.lineWidth = 1.8;
+
+        if (yZero >= padT && yZero <= padT + plotH) {
+          ctx.beginPath();
+          ctx.moveTo(padL, yZero);
+          ctx.lineTo(padL + plotW, yZero);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(padL + plotW, yZero);
+          ctx.lineTo(padL + plotW - 7, yZero - 4);
+          ctx.lineTo(padL + plotW - 7, yZero + 4);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        if (xZero >= padL && xZero <= padL + plotW) {
+          ctx.beginPath();
+          ctx.moveTo(xZero, padT + plotH);
+          ctx.lineTo(xZero, padT);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(xZero, padT);
+          ctx.lineTo(xZero - 4, padT + 7);
+          ctx.lineTo(xZero + 4, padT + 7);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // 3. Label Sumbu X & Sumbu Y
+        ctx.font = `600 11px 'JetBrains Mono', monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = col('--text-muted');
+
+        const baseGridAngles = [];
+        for (let gx = Math.ceil(M.xMin / majorStepX) * majorStepX; gx <= M.xMax; gx += majorStepX) {
+          baseGridAngles.push(Number(gx.toFixed(4)));
+        }
+        const xTicks = [...new Set([...baseGridAngles, ...M.testTable.map(t => t.x)])]
+          .filter(v => v >= M.xMin - 1e-5 && v <= M.xMax + 1e-5)
+          .sort((a, b) => a - b);
+
+        let prevLblPx = -999;
+        xTicks.forEach(deg => {
+          const px = toX(deg);
+          if (px - prevLblPx >= 36) {
+            if (yZero >= padT && yZero <= padT + plotH) {
+              ctx.strokeStyle = axisCol;
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              ctx.moveTo(px, yZero - 3);
+              ctx.lineTo(px, yZero + 3);
+              ctx.stroke();
+            }
+            ctx.fillStyle = col('--text-muted');
+            ctx.fillText(fmtAngle(deg), px, padT + plotH + 18);
+            prevLblPx = px;
+          }
+        });
+
+        ctx.font = `700 12px 'Inter', sans-serif`;
+        ctx.fillStyle = axisCol;
+        ctx.textAlign = 'right';
+        ctx.fillText('x', padL + plotW - 2, Math.max(padT + 14, yZero - 8));
+        ctx.textAlign = 'left';
+        ctx.fillText('y', Math.min(padL + plotW - 14, xZero + 8), padT + 12);
+
+        ctx.font = `600 11px 'JetBrains Mono', monospace`;
+        ctx.textAlign = 'right';
+        ctx.fillStyle = col('--text-muted');
+        for (let gy = Math.ceil(V.ymin / majorStepY) * majorStepY; gy <= Math.floor(V.ymax); gy += majorStepY) {
+          if (Math.abs(gy) < 1e-7) continue;
+          const py = toY(gy);
+          if (py >= padT + 8 && py <= padT + plotH - 6) {
+            ctx.fillText(fmtNum(gy), padL - 7, py + 4);
+          }
+        }
+        if (xZero >= padL && yZero >= padT && yZero <= padT + plotH) {
+          ctx.fillText('0', xZero - 6, yZero + 14);
+        }
+
+        // Clipping area plot
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(padL, padT, plotW, plotH);
+        ctx.clip();
+
+        // 4. Grafik Dasar Pembanding (y = sin x / cos x / tan x)
+        if ($('compareBaseChk').checked) {
+          drawTrigCurve(ctx, M.xMin, M.xMax, x => Math[M.fn](RAD(x)), x => x, col('--compare'), 1.8, [6, 5], 1);
+        }
+
+        // 5. Garis Asimtot Tegak (Tan) atau Garis Batas Maks/Min (Sin/Cos)
+        if ($('layerBounds').checked && state.step >= 2) {
+          if (M.fn === 'tan') {
+            const listAsym = state.step <= 3
+              ? M.asymptotes.filter(ax => ax >= M.pStart - 1e-4 && ax <= M.pEnd + 1e-4)
+              : M.asymptotes;
+
+            listAsym.forEach(ax => {
+              const px = toX(ax);
+              ctx.save();
+              ctx.strokeStyle = col('--asym');
+              ctx.lineWidth = 1.8;
+              ctx.setLineDash([6, 4]);
+              ctx.beginPath();
+              ctx.moveTo(px, padT);
+              ctx.lineTo(px, padT + plotH);
+              ctx.stroke();
+              ctx.restore();
+
+              const lbl = `x=${fmtAngle(ax)}`;
+              ctx.font = `700 10px 'JetBrains Mono', monospace`;
+              const tw = ctx.measureText(lbl).width + 8;
+              ctx.fillStyle = col('--asym');
+              roundRect(ctx, px - tw / 2, padT + 4, tw, 16, 4);
+              ctx.fill();
+              ctx.fillStyle = '#ffffff';
+              ctx.textAlign = 'center';
+              ctx.fillText(lbl, px, padT + 15);
+            });
+          } else {
+            drawHorizontalGuide(ctx, toY(M.d), padL, plotW, col('--midline'), `y = ${fmtNum(M.d)}`, 'left');
+            drawHorizontalGuide(ctx, toY(M.maxValue), padL, plotW, col('--asym'), `maks = ${fmtNum(M.maxValue)}`, 'right');
+            drawHorizontalGuide(ctx, toY(M.minValue), padL, plotW, col('--asym'), `min = ${fmtNum(M.minValue)}`, 'right');
+          }
+        }
+
+        // 6. Penanda Lebar 1 Periode (Langkah 3 & 4)
+        if (state.step === 3 || state.step === 4) {
+          const xA = toX(M.pStart);
+          const xB = toX(M.pEnd);
+          const barY = padT + plotH - 12;
+          ctx.save();
+          ctx.strokeStyle = col('--accent');
+          ctx.fillStyle = col('--accent');
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(xA, barY);
+          ctx.lineTo(xB, barY);
+          ctx.moveTo(xA, barY - 5);
+          ctx.lineTo(xA, barY + 5);
+          ctx.moveTo(xB, barY - 5);
+          ctx.lineTo(xB, barY + 5);
+          ctx.stroke();
+
+          ctx.font = `700 11px 'Inter', sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText(`1 Periode = ${fmtAngle(M.period)}`, (xA + xB) / 2, barY - 6);
+          ctx.restore();
+        }
+
+        // 7. Kurva Utama (tampil penuh pada Langkah 1, 2, 4, 5, 6; animasi 1 periode pada Langkah 3)
+        const evalY = x => M.a * Math[M.fn](RAD(M.b * x + M.c)) + M.d;
+        const evalTheta = x => M.b * x + M.c;
+
+        if (state.step === 3) {
+          drawTrigCurve(ctx, M.pStart, M.pEnd, evalY, evalTheta, col('--curve'), 3.4, [], state.animProgress);
+        } else {
+          drawTrigCurve(ctx, M.xMin, M.xMax, evalY, evalTheta, col('--curve'), 2.7, [], 1);
+          if (state.step === 4) {
+            drawTrigCurve(ctx, M.pStart, M.pEnd, evalY, evalTheta, col('--curve'), 3.8, [], 1);
+          }
+        }
+
+        // 8. Plot Titik Uji & Titik Istimewa
+        M.testTable.forEach(pt => {
+          if (pt.isAsym || pt.y < V.ymin || pt.y > V.ymax) return;
+          drawDot(ctx, toX(pt.x), toY(pt.y), 4.2, col('--curve'), col('--paper'));
+        });
+
+        if ($('layerSpecials').checked) {
+          const xInts = state.step === 3
+            ? M.xIntercepts.filter(p => p.x >= M.pStart - 1e-4 && p.x <= M.pEnd + 1e-4)
+            : M.xIntercepts;
+          xInts.forEach(pt => drawDot(ctx, toX(pt.x), toY(pt.y), 5.2, col('--intercept'), '#ffffff'));
+
+          const extraPts = M.fn === 'tan' ? M.helperPoints : [...M.peaks, ...M.troughs];
+          const filteredExtras = state.step === 3
+            ? extraPts.filter(p => p.x >= M.pStart - 1e-4 && p.x <= M.pEnd + 1e-4)
+            : extraPts;
+          filteredExtras.forEach(pt => {
+            if (pt.y < V.ymin || pt.y > V.ymax) return;
+            drawDot(ctx, toX(pt.x), toY(pt.y), 5.2, col('--extrema'), '#ffffff');
+          });
+        }
+
+        // 9. TITIK PIN TERKUNCI (PINNED POINT)
+        if (state.pinnedPoint) {
+          const pp = state.pinnedPoint;
+          const px = toX(pp.x);
+          const pinCol = col('--pin');
+
+          if (pp.isAsym) {
+            ctx.save();
+            ctx.strokeStyle = pinCol;
+            ctx.lineWidth = 3.6;
+            ctx.setLineDash([8, 4]);
+            ctx.beginPath();
+            ctx.moveTo(px, padT);
+            ctx.lineTo(px, padT + plotH);
+            ctx.stroke();
+            ctx.restore();
+
+            drawCallout(ctx, px, padT + 44, `Asimtot x = ${fmtAngle(pp.x)}`, pinCol, padL, padL + plotW, padT, padT + plotH);
+          } else if (pp.y !== null && isFinite(pp.y)) {
+            const py = toY(pp.y);
+
+            // Garis proyeksi putus-putus ke sumbu-X dan sumbu-Y
+            ctx.save();
+            ctx.strokeStyle = pinCol;
+            ctx.lineWidth = 1.9;
+            ctx.setLineDash([5, 4]);
+            ctx.beginPath();
+            ctx.moveTo(px, py);
+            ctx.lineTo(px, yZero);
+            ctx.moveTo(px, py);
+            ctx.lineTo(xZero, py);
+            ctx.stroke();
+            ctx.restore();
+
+            // Lingkaran pin besar dengan cincin putih
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(px, py, 10.5, 0, Math.PI * 2);
+            ctx.strokeStyle = pinCol;
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            drawDot(ctx, px, py, 6, pinCol, '#ffffff');
+            ctx.restore();
+
+            const yText = pp.exactY && pp.exactY !== 'Tak Terdefinisi' ? pp.exactY : fmtNum(pp.y);
+            drawCallout(ctx, px, py - 20, `(${fmtAngle(pp.x)} ; ${yText})`, pinCol, padL, padL + plotW, padT, padT + plotH);
+          }
+        }
+
+        // 10. HOVER CROSSHAIR PREVIEW
+        if (state.hoverPoint) {
+          const hp = state.hoverPoint;
+          const hx = toX(hp.x);
+          const hy = hp.isAsym ? hp.mousePy : toY(hp.y);
+          const hCol = hp.snapped ? col('--accent') : col('--text-muted');
+
+          ctx.save();
+          ctx.strokeStyle = hCol;
+          ctx.globalAlpha = 0.65;
+          ctx.lineWidth = 1.2;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(hx, padT);
+          ctx.lineTo(hx, padT + plotH);
+          if (!hp.isAsym && hy >= padT && hy <= padT + plotH) {
+            ctx.moveTo(padL, hy);
+            ctx.lineTo(padL + plotW, hy);
+          }
+          ctx.stroke();
+          ctx.restore();
+
+          if (!hp.isAsym && hy >= padT && hy <= padT + plotH) {
+            drawDot(ctx, hx, hy, hp.snapped ? 6.5 : 4.5, col('--accent'), '#ffffff');
+          }
+
+          const yTxt = hp.isAsym ? 'Asimtot (∞)' : (hp.exactY || fmtNum(hp.y));
+          const tip = hp.isAsym
+            ? `Asimtot x = ${fmtAngle(hp.x)}`
+            : `${hp.snapped ? '✦ ' : ''}(${fmtAngle(hp.x)} ; ${yTxt})`;
+          drawCallout(ctx, hx, Math.max(padT + 26, Math.min(padT + plotH - 14, hy - 16)), tip, col('--axis'), padL, padL + plotW, padT, padT + plotH);
+        }
+
+        ctx.restore();
+      }
+
+      function drawHorizontalGuide(ctx, py, padL, plotW, color, label, align) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.4;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(padL, py);
+        ctx.lineTo(padL + plotW, py);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.font = `700 10px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = color;
+        ctx.textAlign = align;
+        const tx = align === 'left' ? padL + 6 : padL + plotW - 6;
+        ctx.fillText(label, tx, py - 5);
+      }
+
+      function drawTrigCurve(ctx, xStart, xEnd, fnY, fnTheta, strokeCol, lineW, dashArr, progress) {
+        if (!layoutInfo) return;
+        const { toX, toY, V } = layoutInfo;
+        const isTan = state.model.fn === 'tan';
+        const steps = 720;
+        const limitX = xStart + (xEnd - xStart) * progress;
+
+        ctx.save();
+        ctx.strokeStyle = strokeCol;
+        ctx.lineWidth = lineW;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        if (dashArr && dashArr.length) ctx.setLineDash(dashArr);
+
+        ctx.beginPath();
+        let prevBranch = null;
+        let penDown = false;
+
+        for (let i = 0; i <= steps; i++) {
+          const x = xStart + ((limitX - xStart) * i) / steps;
+          const theta = fnTheta(x);
+          const branch = Math.floor((theta + 90) / 180);
+
+          // Putus jalur penggambaran tepat di setiap asimtot tegak agar tidak ada garis vertikal palsu
+          if (isTan && ((prevBranch !== null && branch !== prevBranch) || Math.abs(Math.cos(RAD(theta))) < 0.014)) {
+            penDown = false;
+            prevBranch = branch;
+            continue;
+          }
+
+          prevBranch = branch;
+          const y = fnY(x);
+          if (!isFinite(y) || y < V.ymin - 2 || y > V.ymax + 2) {
+            penDown = false;
+            continue;
+          }
+
+          const px = toX(x);
+          const py = toY(y);
+          if (!penDown) {
+            ctx.moveTo(px, py);
+            penDown = true;
+          } else {
+            ctx.lineTo(px, py);
+          }
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawDot(ctx, cx, cy, r, fill, stroke) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = fill;
+        ctx.fill();
+        if (stroke) {
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = stroke;
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawCallout(ctx, anchorX, anchorY, text, bgColor, minX, maxX, minY, maxY) {
+        ctx.save();
+        ctx.font = `700 11px 'JetBrains Mono', monospace`;
+        const padX = 8;
+        const boxH = 22;
+        const boxW = ctx.measureText(text).width + padX * 2;
+
+        let bx = anchorX - boxW / 2;
+        let by = anchorY - boxH / 2;
+
+        if (bx < minX + 4) bx = minX + 4;
+        if (bx + boxW > maxX - 4) bx = maxX - 4 - boxW;
+        if (by < minY + 4) by = anchorY + 16;
+        if (by + boxH > maxY - 4) by = maxY - 4 - boxH;
+
+        ctx.fillStyle = bgColor;
+        roundRect(ctx, bx, by, boxW, boxH, 6);
+        ctx.fill();
+
+        const isDarkPaper = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim() === '#0f172a';
+        ctx.fillStyle = isDarkPaper && bgColor === '#f8fafc' ? '#0f172a' : '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, bx + boxW / 2, by + 14.5);
+        ctx.restore();
+      }
+
+      function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+
+      /* =========================================================================
+         10. RESOLUSI KETUKAN & MAGNETIC SNAP PADA GRAFIK
+         ========================================================================= */
+      function resolveCanvasCoords(clientX, clientY) {
+        if (!layoutInfo) return null;
+        const cv = $('graphCanvas');
+        const rect = cv.getBoundingClientRect();
+        const px = clientX - rect.left;
+        const py = clientY - rect.top;
+
+        const { padL, padT, plotW, plotH, toX, toY, fromX } = layoutInfo;
+        if (px < padL - 12 || px > padL + plotW + 12 || py < padT - 12 || py > padT + plotH + 12) {
+          return null;
+        }
+
+        const M = state.model;
+        let bestSnap = null;
+        let bestDist = 22;
+
+        M.snapPoints.forEach(sp => {
+          const spx = toX(sp.x);
+          if (sp.isAsym) {
+            const dx = Math.abs(px - spx);
+            if (dx < 14 && dx < bestDist) {
+              bestDist = dx;
+              bestSnap = { ...sp, snapped: true, mousePy: py };
+            }
+          } else {
+            const spy = toY(sp.y);
+            const dist = Math.hypot(px - spx, py - spy);
+            if (dist < bestDist) {
+              bestDist = dist;
+              bestSnap = { ...sp, snapped: true, mousePy: spy };
+            }
+          }
+        });
+
+        if (bestSnap) return bestSnap;
+
+        const rawX = Math.max(M.xMin, Math.min(M.xMax, fromX(px)));
+        const snappedX = Math.round(rawX * 2) / 2;
+        const theta = M.b * snappedX + M.c;
+        const isAsym = M.fn === 'tan' && Math.abs(Math.cos(RAD(theta))) < 1e-6;
+        const bv = isAsym ? null : Math[M.fn](RAD(theta));
+        const y = isAsym ? null : M.a * bv + M.d;
+
+        return {
+          x: snappedX,
+          y,
+          theta,
+          isAsym,
+          exactY: isAsym ? 'Tak Terdefinisi' : fmtNum(y),
+          role: isAsym ? 'Asimtot Tegak' : 'Titik pada Kurva',
+          snapped: false,
+          mousePy: py
+        };
+      }
+
+      /* =========================================================================
+         11. KONTROL STATE, NAVIGASI, DAN EVENT LISTENER
+         ========================================================================= */
+      function setStep(num) {
+        state.step = Math.max(1, Math.min(6, num));
+        if (state.animFrameId) {
+          cancelAnimationFrame(state.animFrameId);
+          state.animFrameId = null;
+        }
+
+        if (state.step === 3) {
+          state.animProgress = 0;
+          const start = performance.now();
+          const duration = 1200;
+          const tick = now => {
+            state.animProgress = Math.min(1, (now - start) / duration);
+            drawCanvas();
+            if (state.animProgress < 1 && state.step === 3) {
+              state.animFrameId = requestAnimationFrame(tick);
+            }
+          };
+          state.animFrameId = requestAnimationFrame(tick);
+        } else {
+          state.animProgress = 1;
+        }
+
+        renderStepPanel();
+        drawCanvas();
+      }
+
+      function showDiagnostic(msg) {
+        const errEl = $('eqError');
+        errEl.textContent = msg;
+        errEl.classList.remove('hidden');
+      }
+
+      function applyEquation(eqStr, presetId = null) {
+        try {
+          const parsed = parseTrigEquation(eqStr);
+          const errEl = $('eqError');
+
+          if (!parsed) {
+            showDiagnostic('Format persamaan tidak dikenali. Contoh yang valid: y = tan(2x), y = 2 sin(3x + 30°) - 1, y = 3 tan(1/2 x), atau y = -tan(x + π/4).');
+            return;
+          }
+
+          const xMin = parseFloat($('xMinInput').value);
+          const xMax = parseFloat($('xMaxInput').value);
+          if (!isFinite(xMin) || !isFinite(xMax) || !(xMax > xMin) || (xMax - xMin) > 2880) {
+            showDiagnostic('Domain x tidak valid: nilai x akhir harus lebih besar dari x awal (rentang maksimal 2880°).');
+            return;
+          }
+
+          errEl.classList.add('hidden');
+          state.activePresetId = presetId;
+          state.activeTab = parsed.fn === 'tan' ? 'tan' : 'sincos';
+          state.model = buildModel(parsed, xMin, xMax);
+          $('eqInput').value = eqStr;
+
+          state.hoverPoint = null;
+          renderPresets();
+          renderQuickChips();
+          updateHeaders();
+
+          // Otomatis pin titik bantu/puncak pertama agar Kartu Koordinat Terpilih langsung informatif
+          const defaultPin = state.model.helperPoints[0] || state.model.peaks[0] || state.model.testTable[0];
+          if (defaultPin) {
+            setPinnedPoint(defaultPin);
+          } else {
+            clearPinnedPoint();
+          }
+
+          setStep(1);
+        } catch (err) {
+          showDiagnostic('Terjadi kesalahan saat memproses rumus: ' + (err && err.message ? err.message : 'Periksa kembali penulisan persamaan.'));
+        }
+      }
+
+      function insertSymbolAtCursor(symbol) {
+        const input = $('eqInput');
+        if (!input) return;
+        const start = typeof input.selectionStart === 'number' ? input.selectionStart : input.value.length;
+        const end = typeof input.selectionEnd === 'number' ? input.selectionEnd : input.value.length;
+        const val = input.value;
+        input.value = val.slice(0, start) + symbol + val.slice(end);
+        const nextPos = start + symbol.length;
+        input.focus();
+        try {
+          input.setSelectionRange(nextPos, nextPos);
+        } catch (_) {}
+      }
+
+      function setAngleUnit(unit) {
+        state.angleUnit = unit;
+        const isDeg = unit === 'deg';
+        $('unitDegBtn').style.backgroundColor = isDeg ? 'var(--accent)' : 'transparent';
+        $('unitDegBtn').style.color = isDeg ? '#ffffff' : 'var(--text-muted)';
+        $('unitRadBtn').style.backgroundColor = !isDeg ? 'var(--accent)' : 'transparent';
+        $('unitRadBtn').style.color = !isDeg ? '#ffffff' : 'var(--text-muted)';
+
+        updateHeaders();
+        renderQuickChips();
+        if (state.pinnedPoint) {
+          setPinnedPoint(state.pinnedPoint);
+        }
+        renderStepPanel();
+        drawCanvas();
+      }
+
+      function toggleTheme() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', next);
+        $('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+        $('themeLabel').textContent = next === 'dark' ? 'Mode Terang' : 'Mode Gelap';
+        drawCanvas();
+      }
+
+      function setFullscreen(flag) {
+        state.isFullscreen = Boolean(flag);
+        $('workspaceGrid').classList.toggle('is-fullscreen', state.isFullscreen);
+        $('fsLabel').textContent = state.isFullscreen ? 'Keluar Layar Penuh' : 'Mode Proyektor';
+        document.body.style.overflow = state.isFullscreen ? 'hidden' : '';
+        drawCanvas();
+      }
+
+      function init() {
+        if (!state.initialized) {
+          state.initialized = true;
+
+          // Delegated Click Listener tunggal untuk seluruh elemen interaktif
+          document.addEventListener('click', e => {
+            const target = e.target;
+            if (!(target instanceof Element)) return;
+
+            const symBtn = target.closest('[data-insert-sym]');
+            if (symBtn) {
+              insertSymbolAtCursor(symBtn.getAttribute('data-insert-sym'));
+              return;
+            }
+
+            if (target.closest('#resetInputBtn')) {
+              $('eqInput').value = 'y = ';
+              $('eqInput').focus();
+              $('eqError').classList.add('hidden');
+              return;
+            }
+
+            const tabBtn = target.closest('[data-preset-tab]');
+            if (tabBtn) {
+              state.activeTab = tabBtn.getAttribute('data-preset-tab');
+              renderPresets();
+              return;
+            }
+
+            const presetBtn = target.closest('[data-preset-id]');
+            if (presetBtn) {
+              $('xMinInput').value = '0';
+              $('xMaxInput').value = '360';
+              applyEquation(presetBtn.getAttribute('data-eq'), presetBtn.getAttribute('data-preset-id'));
+              return;
+            }
+
+            if (target.closest('#applyEqBtn')) {
+              applyEquation($('eqInput').value, null);
+              return;
+            }
+
+            if (target.closest('#unitDegBtn')) {
+              setAngleUnit('deg');
+              return;
+            }
+
+            if (target.closest('#unitRadBtn')) {
+              setAngleUnit('rad');
+              return;
+            }
+
+            if (target.closest('#themeBtn')) {
+              toggleTheme();
+              return;
+            }
+
+            if (target.closest('#fsBtn')) {
+              setFullscreen(!state.isFullscreen);
+              return;
+            }
+
+            if (target.closest('#exitFullBtn')) {
+              setFullscreen(false);
+              return;
+            }
+
+            const stepBtn = target.closest('[data-step]');
+            if (stepBtn) {
+              setStep(Number(stepBtn.getAttribute('data-step')));
+              return;
+            }
+
+            if (target.closest('#prevStepBtn')) {
+              setStep(state.step - 1);
+              return;
+            }
+
+            if (target.closest('#nextStepBtn')) {
+              setStep(state.step + 1);
+              return;
+            }
+
+            if (target.closest('#replayAnimBtn')) {
+              setStep(3);
+              return;
+            }
+
+            const testRow = target.closest('[data-test-idx]');
+            if (testRow) {
+              const idx = Number(testRow.getAttribute('data-test-idx'));
+              const item = state.model.testTable[idx];
+              if (item) setPinnedPoint(item);
+              return;
+            }
+
+            const pinChip = target.closest('[data-pin-x]');
+            if (pinChip) {
+              pinByX(Number(pinChip.getAttribute('data-pin-x')));
+              return;
+            }
+
+            if (target.closest('#clearPinBtn')) {
+              clearPinnedPoint();
+              return;
+            }
+          });
+
+          // Interaksi Kanvas: bidik pasif + ketuk/klik untuk kunci titik
+          const canvasEl = $('graphCanvas');
+          canvasEl.addEventListener(
+            'pointermove',
+            e => {
+              const res = resolveCanvasCoords(e.clientX, e.clientY);
+              state.hoverPoint = res;
+              if (res) {
+                const yTxt = res.isAsym ? 'Asimtot (∞)' : (res.exactY || fmtNum(res.y));
+                $('hoverReadout').textContent = res.isAsym
+                  ? `Asimtot x = ${fmtAngle(res.x)}`
+                  : `${res.snapped ? '✦ Snap: ' : 'Bidik: '}(${fmtAngle(res.x)} ; ${yTxt})`;
+              } else {
+                $('hoverReadout').textContent = 'Siap dibidik';
+              }
+              drawCanvas();
+            },
+            { passive: true }
+          );
+
+          canvasEl.addEventListener('pointerleave', () => {
+            state.hoverPoint = null;
+            $('hoverReadout').textContent = 'Siap dibidik';
+            drawCanvas();
+          });
+
+          canvasEl.addEventListener('click', e => {
+            const res = resolveCanvasCoords(e.clientX, e.clientY);
+            if (res) {
+              setPinnedPoint(res);
+            }
+          });
+
+          // Input Enter & Perubahan Checkbox / Domain
+          $('eqInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') applyEquation($('eqInput').value, null);
+          });
+          $('xMinInput').addEventListener('change', () => applyEquation($('eqInput').value, state.activePresetId));
+          $('xMaxInput').addEventListener('change', () => applyEquation($('eqInput').value, state.activePresetId));
+          $('compareBaseChk').addEventListener('change', drawCanvas);
+          $('layerSpecials').addEventListener('change', drawCanvas);
+          $('layerBounds').addEventListener('change', drawCanvas);
+
+          // ResizeObserver pada kontainer kanvas & window resize
+          const wrapEl = $('canvasWrap');
+          if (typeof ResizeObserver !== 'undefined' && wrapEl) {
+            const ro = new ResizeObserver(() => {
+              requestAnimationFrame(drawCanvas);
+            });
+            ro.observe(wrapEl);
+          }
+
+          window.addEventListener('resize', drawCanvas);
+          window.addEventListener('keydown', e => {
+            if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
+            if (e.key === 'Escape' && state.isFullscreen) setFullscreen(false);
+            if (e.key === 'ArrowRight') setStep(state.step + 1);
+            if (e.key === 'ArrowLeft') setStep(state.step - 1);
+          });
+
+          // Render awal UI
+          renderPresets();
+          renderQuickChips();
+          updateHeaders();
+          const defaultStartPin = state.model.helperPoints[0] || state.model.testTable[2];
+          if (defaultStartPin) {
+            setPinnedPoint(defaultStartPin);
+          }
+          setStep(1);
+        }
+
+        drawCanvas();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+      window.addEventListener('load', init);
+      requestAnimationFrame(init);
+    })();
+  </script>
+</body>
+</html>
